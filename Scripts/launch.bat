@@ -1,2 +1,2 @@
 @echo off
-python Source/image_processing_tool.py
+python Source/OCR-DRAG-N-Drop-Tool.py
