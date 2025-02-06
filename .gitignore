@@ -1,0 +1,28 @@
+# Build output
+build/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Virtual Environment
+venv/
+env/
+.env/
+.venv/
+
+# Project specific
+localpycs/
+*.log
+*.txt
+
+# IDE
+.vscode/
+*.swp
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
