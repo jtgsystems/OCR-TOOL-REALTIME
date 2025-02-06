@@ -48,21 +48,30 @@
    # Clone repo
    git clone [repository-url]
    cd OCR-DRAG-N-Drop-Tool
-
-   # Create virtual environment
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
-   pip install -r requirements.txt
    ```
 
-3. **Run Setup**
+3. **Automated Setup Scripts**
+
+   We provide automated setup scripts that will:
+
+   - Create a Python virtual environment
+   - Install all required dependencies
+   - Configure Tesseract OCR path
+   - Launch the application
+
+   Choose your platform:
 
    ```bash
-   # Windows
+   # Windows: Double-click or run in terminal
    Scripts/setup.bat
-   # Unix
-   bash Scripts/setup.sh
+
+   # Linux/macOS: Run in terminal
+   chmod +x Scripts/setup.sh  # Make executable
+   ./Scripts/setup.sh
    ```
+
+   The setup scripts will handle everything automatically. If any prerequisites
+   are missing, they will notify you with instructions.
 
 ## 🚀 Usage
 
@@ -117,4 +126,4 @@ MIT License - feel free to use and modify!
 
 ---
 
-Made with ❤️ for the OCR community
+Made with ❤️ by [JTG Systems](https://www.jtgsystems.com)
