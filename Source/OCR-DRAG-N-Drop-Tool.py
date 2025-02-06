@@ -21,20 +21,42 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+
+def get_base_path():
+    """Get the base path for the application.
+
+    Handles both PyInstaller and normal execution.
+    """
+    if getattr(sys, "frozen", False):
+        # Running as compiled executable
+        return os.path.dirname(sys.executable)
+    # Running as script
+    return os.path.dirname(os.path.abspath(__file__))
+
+
 # Try to find Tesseract executable
 tesseract_path = None
 tessdata_path = None
+
 if platform.system() == "Windows":
-    # Check default installation paths
-    possible_paths = [
-        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
-    ]
-    for path in possible_paths:
-        if os.path.exists(path):
-            tesseract_path = path
-            tessdata_path = os.path.join(os.path.dirname(path), "tessdata")
-            break
+    # First check portable path (next to executable)
+    base_path = get_base_path()
+    portable_tesseract = os.path.join(base_path, "Tesseract-OCR", "tesseract.exe")
+    if os.path.exists(portable_tesseract):
+        tesseract_path = portable_tesseract
+        tesseract_dir = os.path.dirname(portable_tesseract)
+        tessdata_path = os.path.join(tesseract_dir, "tessdata")
+    else:
+        # Check default installation paths
+        possible_paths = [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                tesseract_path = path
+                tessdata_path = os.path.join(os.path.dirname(path), "tessdata")
+                break
 else:
     # For other systems, rely on PATH or environment variables
     tesseract_path = "tesseract"  # Assumes it's in PATH
@@ -47,9 +69,7 @@ if tesseract_path:
 
 
 class WorkerSignals(QObject):
-    """
-    Defines the signals available from a running worker thread.
-    """
+    """Defines the signals available from a running worker thread."""
 
     finished = Signal()
     result = Signal(str)
@@ -58,35 +78,28 @@ class WorkerSignals(QObject):
 
 
 class ImageProcessor(QRunnable):
-    """
-    Processes a single image file to extract text using Tesseract OCR.
-    """
+    """Processes a single image file to extract text using Tesseract OCR."""
 
     def __init__(self, file, config=None):
-        """
-        Initializes the ImageProcessor with the file path.
-        """
+        """Initializes the ImageProcessor with the file path."""
         super().__init__()
         self.file = file
         self.config = config
         self.signals = WorkerSignals()
 
     def preprocess_image(self, image):
-        """
-        Basic preprocessing focused on clarity and contrast.
-        """
+        """Basic preprocessing focused on clarity and contrast."""
         # Convert to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Simple thresholding
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        threshold_flags = cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        _, binary = cv2.threshold(gray, 0, 255, threshold_flags)
 
         return binary
 
     def run(self):
-        """
-        Runs the image processing task in a separate thread.
-        """
+        """Runs the image processing task in a separate thread."""
         try:
             # Load the image using OpenCV
             image = cv2.imread(self.file)
@@ -120,26 +133,25 @@ class ImageProcessor(QRunnable):
 
 
 class MainWindow(QMainWindow):
-    """
-    Main window of the image processing tool.
-    """
+    """Main window of the image processing tool."""
 
     def __init__(self):
-        """
-        Initializes the main window and sets up the UI.
-        """
+        """Initializes the main window and sets up the UI."""
         super().__init__()
 
         # Check if Tesseract is available
-        if not tesseract_path or not os.path.exists(tesseract_path):
+        if not tesseract_path or (
+            platform.system() == "Windows" and not os.path.exists(tesseract_path)
+        ):
             QMessageBox.critical(
                 None,
                 "Error",
-                "Tesseract OCR is not installed or not found. Please install Tesseract OCR and try again.",
+                "Tesseract OCR is not found. Please ensure Tesseract-OCR is in "
+                "the same folder as the executable.",
             )
             sys.exit(1)
 
-        self.setWindowTitle("Image Processing Tool")
+        self.setWindowTitle("OCR Tool")
         self.setGeometry(100, 100, 800, 600)
         self.setAcceptDrops(True)
 
@@ -224,9 +236,7 @@ class MainWindow(QMainWindow):
         self.processed_files = 0
 
     def select_folder(self):
-        """
-        Opens a folder selection dialog and processes all images in the selected folder.
-        """
+        """Opens a folder selection dialog and processes all images."""
         folder_dialog = QFileDialog()
         folder_path = folder_dialog.getExistingDirectory(
             self, "Select Folder", "", QFileDialog.ShowDirsOnly
@@ -235,16 +245,12 @@ class MainWindow(QMainWindow):
             self.process_files([folder_path])
 
     def dragEnterEvent(self, event):
-        """
-        Handles drag enter events for accepting dropped files.
-        """
+        """Handles drag enter events for accepting dropped files."""
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-        """
-        Handles drop events for processing dropped files.
-        """
+        """Handles drop events for processing dropped files."""
         urls = event.mimeData().urls()
         files = [url.toLocalFile() for url in urls if url.isLocalFile()]
         self.process_files(files)
@@ -279,9 +285,7 @@ class MainWindow(QMainWindow):
         return count
 
     def process_files(self, files):
-        """
-        Processes a list of image files or folders.
-        """
+        """Processes a list of image files or folders."""
         # Reset state
         self.processed_files = 0
         self.progress_bar.setValue(0)
@@ -324,7 +328,9 @@ class MainWindow(QMainWindow):
                         self.process_image(file)
         except Exception as e:
             QMessageBox.critical(
-                self, "Error", f"An error occurred while processing files: {str(e)}"
+                self,
+                "Error",
+                f"An error occurred while processing files: {str(e)}",
             )
 
     def process_folder(self, folder):
@@ -355,10 +361,13 @@ class MainWindow(QMainWindow):
                             self.label.setText(f"Processing: {file}")
                             self.process_image(file_path)
                     except Exception as e:
-                        self.text_edit.append(f"Error processing {file}: {str(e)}\n")
+                        error_msg = f"Error processing {file}: {str(e)}\n"
+                        self.text_edit.append(error_msg)
         except Exception as e:
             QMessageBox.warning(
-                self, "Folder Error", f"Error accessing folder {folder}: {str(e)}"
+                self,
+                "Folder Error",
+                f"Error accessing folder {folder}: {str(e)}",
             )
 
     def process_image(self, file):
@@ -393,22 +402,19 @@ class MainWindow(QMainWindow):
             self.threadpool.start(worker)
 
         except Exception as e:
-            self.text_edit.append(f"Error setting up OCR for {file}: {str(e)}\n")
+            error_msg = f"Error setting up OCR for {file}: {str(e)}\n"
+            self.text_edit.append(error_msg)
             self.processed_files += 1
             progress = int((self.processed_files / self.total_files) * 100)
             self.progress_bar.setValue(progress)
 
     def handle_result(self, extracted_text):
-        """
-        Handles the extracted text result from a worker thread.
-        """
+        """Handles the extracted text result from a worker thread."""
         self.extracted_texts.append(extracted_text)
         self.update_text_edit()
 
     def handle_finished(self):
-        """
-        Handles the finished signal from a worker thread.
-        """
+        """Handles the finished signal from a worker thread."""
         self.processed_files += 1
         progress = int((self.processed_files / self.total_files) * 100)
         self.progress_bar.setValue(progress)
@@ -416,9 +422,7 @@ class MainWindow(QMainWindow):
         self.label.setText(msg)
 
     def handle_error(self, error_message):
-        """
-        Handles error signals from worker threads and displays error messages.
-        """
+        """Handles error signals from worker threads."""
         # Display the error message in the text edit
         self.text_edit.append(f"Error: {error_message}")
         self.processed_files += 1
@@ -428,10 +432,7 @@ class MainWindow(QMainWindow):
         self.label.setText(msg)
 
     def update_text_edit(self):
-        """
-        Updates the text edit with the extracted text from all processed images.
-        Uses a line separator between extractions.
-        """
+        """Updates the text edit with the extracted text from all images."""
         separator = f"\n{'_' * 50}\n\n"
         description = []
         for text in self.extracted_texts:
@@ -440,9 +441,7 @@ class MainWindow(QMainWindow):
         self.text_edit.setPlainText("".join(description))
 
     def save_text(self):
-        """
-        Saves the extracted text to a text file.
-        """
+        """Saves the extracted text to a text file."""
         if not self.extracted_texts:
             QMessageBox.warning(
                 self,
@@ -464,12 +463,11 @@ class MainWindow(QMainWindow):
                         file.write(f"\n{text}\n{separator}")
                 QMessageBox.information(self, "Success", "Text saved successfully!")
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to save text: {str(e)}")
+                error_msg = f"Failed to save text: {str(e)}"
+                QMessageBox.critical(self, "Error", error_msg)
 
     def clear_text(self):
-        """
-        Clears the text edit and resets the progress bar.
-        """
+        """Clears the text edit and resets the progress bar."""
         self.extracted_texts = []
         self.text_edit.clear()
         self.label.setText("Drag and drop image files or use Open Folder")
