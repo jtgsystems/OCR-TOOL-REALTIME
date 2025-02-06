@@ -1,6 +1,10 @@
-# 📝 OCR Drag-N-Drop Tool
+# 📝 OCR Drag-N-Drop Tool (Work in Progress)
 
 > 🔍 Extract text from images with a simple drag and drop!
+
+⚠️ **WORK IN PROGRESS** ⚠️ This tool is actively being developed. While
+functional, we're continuously adding features and improvements. We welcome
+contributions from the community!
 
 ## ✨ Features
 
@@ -50,9 +54,7 @@
    cd OCR-DRAG-N-Drop-Tool
    ```
 
-3. **Automated Setup Scripts**
-
-   We provide automated setup scripts that will:
+3. **Automated Setup Scripts** We provide automated setup scripts that will:
 
    - Create a Python virtual environment
    - Install all required dependencies
@@ -66,12 +68,18 @@
    Scripts/setup.bat
 
    # Linux/macOS: Run in terminal
-   chmod +x Scripts/setup.sh  # Make executable
+   chmod +x Scripts/setup.sh
    ./Scripts/setup.sh
    ```
 
-   The setup scripts will handle everything automatically. If any prerequisites
-   are missing, they will notify you with instructions.
+### 📦 Portable Version
+
+For Windows users, we provide a portable version that includes everything
+needed:
+
+1. Download the latest release
+2. Extract the OCR-Tool-Portable folder
+3. Run OCR-Tool.exe
 
 ## 🚀 Usage
 
@@ -97,6 +105,43 @@
 - 📷 TIFF, WebP
 - 🎯 PPM, PGM, PBM, PNM
 
+## 🤝 Contributing
+
+We welcome contributions! Here are some areas we'd love help with:
+
+### 🎯 Feature Wishlist
+
+- Additional language support
+- Batch processing improvements
+- Enhanced image preprocessing
+- Custom OCR configurations
+- UI/UX improvements
+- Error handling and recovery
+- Performance optimizations
+
+### How to Contribute
+
+1. 🍴 Fork the repo
+2. 🌿 Create your branch (`git checkout -b feature/Amazing`)
+3. 💾 Commit changes (`git commit -m 'Add Amazing Feature'`)
+4. 📤 Push to branch (`git push origin feature/Amazing`)
+5. 🎯 Open a Pull Request
+
+### Development Setup
+
+1. Follow the installation steps above
+2. Install development dependencies:
+
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+3. Run tests:
+
+   ```bash
+   python -m pytest tests/
+   ```
+
 ## ⚡ Error Handling
 
 The tool smartly handles:
@@ -105,14 +150,6 @@ The tool smartly handles:
 - ⚠️ Unreadable images
 - 🔍 OCR issues
 - 💽 File system errors
-
-## 🤝 Contributing
-
-1. 🍴 Fork the repo
-2. 🌿 Create your branch (`git checkout -b feature/Amazing`)
-3. 💾 Commit changes (`git commit -m 'Add Amazing Feature'`)
-4. 📤 Push to branch (`git push origin feature/Amazing`)
-5. 🎯 Open a Pull Request
 
 ## 📄 License
 
@@ -127,3 +164,6 @@ MIT License - feel free to use and modify!
 ---
 
 Made with ❤️ by [JTG Systems](https://www.jtgsystems.com)
+
+Status: Work in Progress - We welcome any contributions to help improve this
+tool!
