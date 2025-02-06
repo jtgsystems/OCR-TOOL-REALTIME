@@ -1,37 +1,41 @@
 @echo off
-echo Installing dependencies for Advanced OCR Image Processing Tool...
+echo Setting up OCR Tool environment...
 
 REM Check if Python is installed
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Python is not installed. Please install Python 3.7 or higher and run this script again.
+    echo Python is not installed! Please install Python 3.x and try again.
     pause
     exit /b 1
 )
 
-REM Create a virtual environment
-python -m venv venv
-call venv\Scripts\activate
+REM Create virtual environment if it doesn't exist
+if not exist "venv" (
+    echo Creating virtual environment...
+    python -m venv venv
+)
 
-REM Upgrade pip
-python -m pip install --upgrade pip
+REM Activate virtual environment
+call venv\Scripts\activate.bat
 
 REM Install required packages
-pip install PySide6 pytesseract Pillow opencv-python easyocr
+echo Installing required packages...
+python -m pip install --upgrade pip
+pip install PySide6 opencv-python pytesseract
 
-REM Install Tesseract OCR
-echo Installing Tesseract OCR...
-winget install --id UB-Mannheim.TesseractOCR
+REM Check if Tesseract is installed and add to PATH
+echo Checking Tesseract installation...
+powershell -ExecutionPolicy Bypass -File "%~dp0add_tesseract_to_path.ps1"
 
-REM Download and install additional Tesseract language data
-echo Downloading additional Tesseract language data...
-mkdir "%ProgramFiles%\Tesseract-OCR\tessdata"
-curl -L "https://github.com/tesseract-ocr/tessdata_best/raw/main/eng.traineddata" -o "%ProgramFiles%\Tesseract-OCR\tessdata\eng.traineddata"
-curl -L "https://github.com/tesseract-ocr/tessdata_best/raw/main/osd.traineddata" -o "%ProgramFiles%\Tesseract-OCR\tessdata\osd.traineddata"
+REM Launch the application
+echo Starting the application...
+python ..\Source\OCR-DRAG-N-Drop-Tool.py
 
-echo Dependencies installed successfully!
-echo To run the Advanced OCR Image Processing Tool, activate the virtual environment and run the Python script:
-echo venv\Scripts\activate
-echo python image_processing_tool.py
+REM Keep the window open if there's an error
+if %errorlevel% neq 0 (
+    echo An error occurred while running the application.
+    pause
+)
 
-pause
+REM Deactivate virtual environment
+deactivate
