@@ -88,15 +88,41 @@ class ImageProcessor(QRunnable):
         self.signals = WorkerSignals()
 
     def preprocess_image(self, image):
-        """Basic preprocessing focused on clarity and contrast."""
+        """Enhanced preprocessing for better OCR accuracy."""
         # Convert to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        # Simple thresholding
-        threshold_flags = cv2.THRESH_BINARY + cv2.THRESH_OTSU
-        _, binary = cv2.threshold(gray, 0, 255, threshold_flags)
+        # Apply median blur to reduce noise
+        denoised = cv2.medianBlur(gray, 3)
 
-        return binary
+        # Apply adaptive thresholding
+        adaptive_thresh = cv2.adaptiveThreshold(
+            denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+        )
+
+        # Morphological operations to close gaps
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
+
+        return morph
+    def preprocess_image(self, image):
+        """Enhanced preprocessing for better OCR accuracy."""
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # Apply median blur to reduce noise
+        denoised = cv2.medianBlur(gray, 3)
+
+        # Apply adaptive thresholding
+        adaptive_thresh = cv2.adaptiveThreshold(
+            denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+        )
+
+        # Morphological operations to close gaps
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
+
+        return morph
 
     def run(self):
         """Runs the image processing task in a separate thread."""
@@ -383,15 +409,24 @@ class MainWindow(QMainWindow):
                 raise ValueError(f"Not a valid file: {file}")
 
             # Configure Tesseract OCR with robust settings
+            # Configure Tesseract OCR with robust settings
             config = (
-                # Page segmentation mode 3: Fully automatic page segmentation
-                "--psm 3 "
-                # OCR Engine Mode 3: Default
+                # Page segmentation mode 6: Assume a single uniform block of text
+                "--psm 6 "
+                # OCR Engine Mode 3: Default, based on what is available
                 "--oem 3 "
                 # Enable English language
                 "-l eng "
-                # Additional parameters for better accuracy
-                "--dpi 300"
+                # DPI setting
+                "--dpi 300 "
+                # Whitelist common characters for better accuracy
+                "-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!@#$%&*()_+-=\\/ "
+                # Enable fast mode and preserve interword spaces
+                "-c tessedit_write_images=true "
+                "-c preserve_interword_spaces=1 "
+                # Enable dictionary correction and language model
+                "-c load_system_dawg=1 "
+                "-c load_freq_dawg=1 "
             )
 
             worker = ImageProcessor(file, config=config)
