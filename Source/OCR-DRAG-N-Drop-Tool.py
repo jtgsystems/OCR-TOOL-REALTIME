@@ -105,24 +105,6 @@ class ImageProcessor(QRunnable):
         morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
 
         return morph
-    def preprocess_image(self, image):
-        """Enhanced preprocessing for better OCR accuracy."""
-        # Convert to grayscale
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        # Apply median blur to reduce noise
-        denoised = cv2.medianBlur(gray, 3)
-
-        # Apply adaptive thresholding
-        adaptive_thresh = cv2.adaptiveThreshold(
-            denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
-        )
-
-        # Morphological operations to close gaps
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
-        morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
-
-        return morph
 
     def run(self):
         """Runs the image processing task in a separate thread."""
