@@ -21,6 +21,21 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+# Define supported image extensions as a constant
+SUPPORTED_IMAGE_EXTENSIONS = (
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".bmp",
+    ".gif",
+    ".tiff",
+    ".webp",
+    ".ppm",
+    ".pgm",
+    ".pbm",
+    ".pnm",
+)
+
 
 def get_base_path():
     """Get the base path for the application.
@@ -268,27 +283,15 @@ class MainWindow(QMainWindow):
         Recursively counts image files in a path (file or directory).
         Returns the total count of supported image files.
         """
-        supported_extensions = (
-            ".png",
-            ".jpg",
-            ".jpeg",
-            ".bmp",
-            ".gif",
-            ".tiff",
-            ".webp",
-            ".ppm",
-            ".pgm",
-            ".pbm",
-            ".pnm",
-        )
-
         if os.path.isfile(path):
-            return 1 if path.lower().endswith(supported_extensions) else 0
+            # Use the constant for checking extensions
+            return 1 if path.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS) else 0
 
         count = 0
         for root, _, files in os.walk(path):
             for file in files:
-                if file.lower().endswith(supported_extensions):
+                # Use the constant for checking extensions
+                if file.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
                     count += 1
         return count
 
@@ -308,7 +311,7 @@ class MainWindow(QMainWindow):
                 self,
                 "No Images Found",
                 "No supported image files were found.\nSupported formats: "
-                "PNG, JPG, JPEG, BMP, GIF, TIFF, WebP, PPM, PGM, PBM, PNM",
+                f"{', '.join(SUPPORTED_IMAGE_EXTENSIONS)}", # Use constant here
             )
             return
 
@@ -318,21 +321,8 @@ class MainWindow(QMainWindow):
                 if os.path.isdir(file):
                     self.process_folder(file)
                 elif os.path.isfile(file):
-                    if file.lower().endswith(
-                        (
-                            ".png",
-                            ".jpg",
-                            ".jpeg",
-                            ".bmp",
-                            ".gif",
-                            ".tiff",
-                            ".webp",
-                            ".ppm",
-                            ".pgm",
-                            ".pbm",
-                            ".pnm",
-                        )
-                    ):
+                    # Use the constant for checking extensions
+                    if file.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
                         self.process_image(file)
         except Exception as e:
             QMessageBox.critical(
@@ -350,27 +340,16 @@ class MainWindow(QMainWindow):
             for root, _, files in os.walk(folder):
                 for file in files:
                     try:
-                        if file.lower().endswith(
-                            (
-                                ".png",
-                                ".jpg",
-                                ".jpeg",
-                                ".bmp",
-                                ".gif",
-                                ".tiff",
-                                ".webp",
-                                ".ppm",
-                                ".pgm",
-                                ".pbm",
-                                ".pnm",
-                            )
-                        ):
+                        # Use the constant for checking extensions
+                        if file.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
                             file_path = os.path.join(root, file)
                             self.label.setText(f"Processing: {file}")
                             self.process_image(file_path)
                     except Exception as e:
                         error_msg = f"Error processing {file}: {str(e)}\n"
                         self.text_edit.append(error_msg)
+                        # Update progress even if processing a single file in the folder fails
+                        self._update_progress()
         except Exception as e:
             QMessageBox.warning(
                 self,
@@ -391,7 +370,6 @@ class MainWindow(QMainWindow):
                 raise ValueError(f"Not a valid file: {file}")
 
             # Configure Tesseract OCR with robust settings
-            # Configure Tesseract OCR with robust settings
             config = (
                 # Page segmentation mode 6: Assume a single uniform block of text
                 "--psm 6 "
@@ -403,8 +381,7 @@ class MainWindow(QMainWindow):
                 "--dpi 300 "
                 # Whitelist common characters for better accuracy
                 "-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.!@#$%&*()_+-=\\/ "
-                # Enable fast mode and preserve interword spaces
-                "-c tessedit_write_images=true "
+                # Preserve interword spaces (Removed tessedit_write_images=true)
                 "-c preserve_interword_spaces=1 "
                 # Enable dictionary correction and language model
                 "-c load_system_dawg=1 "
@@ -421,9 +398,21 @@ class MainWindow(QMainWindow):
         except Exception as e:
             error_msg = f"Error setting up OCR for {file}: {str(e)}\n"
             self.text_edit.append(error_msg)
-            self.processed_files += 1
+            # Call the new progress update method on error during setup
+            self._update_progress()
+
+    def _update_progress(self):
+        """Updates the progress bar and status label."""
+        self.processed_files += 1
+        # Ensure total_files is not zero before division
+        if self.total_files > 0:
             progress = int((self.processed_files / self.total_files) * 100)
             self.progress_bar.setValue(progress)
+        else:
+             # Set progress to 0 if total_files is 0 to avoid division by zero
+            self.progress_bar.setValue(0)
+        msg = f"Processed {self.processed_files} of {self.total_files} files"
+        self.label.setText(msg)
 
     def handle_result(self, extracted_text):
         """Handles the extracted text result from a worker thread."""
@@ -432,21 +421,15 @@ class MainWindow(QMainWindow):
 
     def handle_finished(self):
         """Handles the finished signal from a worker thread."""
-        self.processed_files += 1
-        progress = int((self.processed_files / self.total_files) * 100)
-        self.progress_bar.setValue(progress)
-        msg = f"Processed {self.processed_files} of {self.total_files} files"
-        self.label.setText(msg)
+        # Call the new progress update method
+        self._update_progress()
 
     def handle_error(self, error_message):
         """Handles error signals from worker threads."""
         # Display the error message in the text edit
         self.text_edit.append(f"Error: {error_message}")
-        self.processed_files += 1
-        progress = int((self.processed_files / self.total_files) * 100)
-        self.progress_bar.setValue(progress)
-        msg = f"Processed {self.processed_files} of {self.total_files} files"
-        self.label.setText(msg)
+        # Call the new progress update method
+        self._update_progress()
 
     def update_text_edit(self):
         """Updates the text edit with the extracted text from all images."""
