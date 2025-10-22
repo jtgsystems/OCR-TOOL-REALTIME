@@ -1,3 +1,5 @@
+![Banner](banner.png)
+
 # 📝 OCR Drag-N-Drop Tool (Work in Progress)
 
 > 🔍 Extract text from images with a simple drag and drop!
