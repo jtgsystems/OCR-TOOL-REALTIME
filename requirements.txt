@@ -1,0 +1,4 @@
+# Core dependencies for OCR Drag-N-Drop Tool
+PySide6>=6.6.0
+opencv-python>=4.8.0
+pytesseract>=0.3.10
