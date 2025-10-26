@@ -549,3 +549,9 @@ Use conventional commits format:
 *Last Updated: 2025-10-26*
 *Project Status: Work in Progress*
 *Contributions Welcome!*
+
+## Framework Versions
+
+- No major frameworks detected in this project
+- This may be a utility script, documentation project, or uses custom dependencies
+
