@@ -68,7 +68,7 @@ Main application file containing:
 Primary programming language
 
 #### GUI Framework
-- **PySide6**: Qt6 bindings for Python
+- **PySide6** (≥6.10.1): Qt6 bindings for Python
   - QMainWindow, QTextEdit, QLabel, QPushButton
   - QFileDialog, QProgressBar, QMessageBox
   - Drag-and-drop events (dragEnterEvent, dropEvent)
