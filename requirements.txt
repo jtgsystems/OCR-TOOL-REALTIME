@@ -1,0 +1,4 @@
+# OCR Tool Dependencies - Latest 2025 Versions
+PySide6>=6.10.1,<7.0.0
+pytesseract>=0.3.13,<1.0.0
+opencv-python>=4.12.0.88,<5.0.0

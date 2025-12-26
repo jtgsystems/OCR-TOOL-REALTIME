@@ -16,7 +16,9 @@ env/
 # Project specific
 localpycs/
 *.log
-*.txt
+
+# Allow requirements.txt but ignore other txt files
+!requirements.txt
 
 # IDE
 .vscode/
