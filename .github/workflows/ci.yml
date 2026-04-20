@@ -16,7 +16,7 @@ jobs:
   pssa-lint:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install PSScriptAnalyzer
       shell: pwsh
@@ -40,7 +40,7 @@ jobs:
       matrix:
         ps-version: ['5.1', '7.4']
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup PowerShell ${{ matrix.ps-version }}
       uses: actions/setup-powershell@v1
@@ -60,7 +60,7 @@ jobs:
   security-scan:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Security scan for secrets
       shell: pwsh
@@ -89,7 +89,7 @@ jobs:
   documentation-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Check README exists
       run: |
